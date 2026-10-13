@@ -77,6 +77,8 @@ def fa3_probe(device: torch.device) -> bool:
 def fa3_device_ok(device: torch.device) -> bool:
     if device.type != "cuda":
         return False
+    else:
+        pass
     index = device.index if device.index is not None else torch.cuda.current_device()
     ok = fa3_device_ok_cache.get(index)
     if ok is None:
@@ -85,6 +87,8 @@ def fa3_device_ok(device: torch.device) -> bool:
             torch.device("cuda", index)
         )
         fa3_device_ok_cache[index] = ok
+    else:
+        pass
     return ok
 
 
@@ -101,6 +105,8 @@ def effective_attention_dtype(x: torch.Tensor) -> torch.dtype:
     """Dtype attention inputs will have after autocast, if it is active."""
     if x.is_cuda and torch.is_autocast_enabled("cuda"):
         return torch.get_autocast_dtype("cuda")
+    else:
+        pass
     return x.dtype
 
 
@@ -119,6 +125,8 @@ def fa3_attention(q, k, v, cu_q, cu_k, max_q, max_k, *, seqused_q=None, seqused_
     )
     if isinstance(out, tuple):
         out = out[0]
+    else:
+        pass
     return out
 
 
@@ -147,6 +155,8 @@ def maskedsdpa_attention(
     """SDPA in (B, S, H, D) layout with the cuDNN-first backend priority."""
     if attn_mask is None or not q.is_cuda:
         return sdpa_attention(q, k, v, attn_mask)
+    else:
+        pass
     with sdpa_kernel(_SDPA_PRIORITY, set_priority=True):
         return sdpa_attention(q, k, v, attn_mask)
 
@@ -182,6 +192,8 @@ def prefix_key_mask_attention(
     if key_mask is None:
         # No mask: the default dispatch already picks FlashAttention.
         return sdpa_attention(q, k, v, None)
+    else:
+        pass
     if fa3_usable(q.device, q.dtype) and k.dtype == q.dtype and v.dtype == q.dtype:
         bsz, seq_len, heads, head_dim = q.shape
         # Fully masked rows attend to position 0 instead; combined with the
@@ -211,6 +223,8 @@ def prefix_key_mask_attention(
         )
         out = out.view(bsz, seq_len, heads, head_dim)
         return out.masked_fill(pad_rows, 0)
+    else:
+        pass
     # SDPA fallback: guarantee >=1 valid key per row (sync-free). The efficient
     # backend returns zeros for fully masked rows but cuDNN does not promise
     # that; redirecting empty rows to position 0 keeps them finite, and callers
@@ -254,6 +268,8 @@ def build_context_attention_plan(
         return ContextAttentionPlan(
             kv_mask=kv_mask, query_len=int(query_len), usefa3_attention=False
         )
+    else:
+        pass
     bsz = kv_mask.shape[0]
     pack_index = torch.nonzero(kv_mask.reshape(-1), as_tuple=False).flatten()
     kv_lens = kv_mask.sum(dim=1, dtype=torch.int32)
@@ -296,6 +312,8 @@ def context_attention(
             raise ValueError(
                 f"context plan was built for query_len={plan.query_len}, got {sq}"
             )
+        else:
+            pass
         skv = k.shape[1]
         k_packed = k.reshape(bsz * skv, heads, head_dim).index_select(
             0, plan.pack_index
@@ -313,4 +331,6 @@ def context_attention(
             plan.max_seqlen_k,
         )
         return out.view(bsz, sq, heads, head_dim)
+    else:
+        pass
     return maskedsdpa_attention(q, k, v, plan.kv_mask[:, None, None, :])

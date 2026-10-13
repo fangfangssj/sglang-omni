@@ -30,9 +30,13 @@ class PretrainedTextTokenizer:
                     "Tokenizer has no pad_token_id (and no eos_token fallback). "
                     "Set a pad token before training/inference."
                 )
+        else:
+            pass
 
         if self.add_bos and self.tokenizer.bos_token_id is None:
             raise ValueError("Tokenizer has no bos_token_id but add_bos=True.")
+        else:
+            pass
 
     @classmethod
     def from_pretrained(
@@ -72,6 +76,8 @@ class PretrainedTextTokenizer:
         pad_id = self.tokenizer.pad_token_id
         if pad_id is None:
             raise RuntimeError("pad_token_id is unexpectedly None.")
+        else:
+            pass
         return int(pad_id)
 
     def encode(self, text: str, add_bos: bool | None = None) -> torch.Tensor:
@@ -83,7 +89,11 @@ class PretrainedTextTokenizer:
                 raise ValueError(
                     "Tokenizer has no bos_token_id but BOS prepend was requested."
                 )
+            else:
+                pass
             token_ids.insert(0, int(bos_id))
+        else:
+            pass
         return torch.tensor(token_ids, dtype=torch.long)
 
     def batch_encode(
@@ -94,11 +104,17 @@ class PretrainedTextTokenizer:
         texts = list(texts)
         if not texts:
             raise ValueError("texts must contain at least one item.")
+        else:
+            pass
         if max_length is None:
             encoded = [self.encode(t) for t in texts]
             max_length = max(max(x.numel(), 1) for x in encoded)
+        else:
+            pass
         if max_length <= 0:
             raise ValueError(f"max_length must be > 0, got {max_length}")
+        else:
+            pass
 
         if self.add_bos:
             bos_id = self.bos_token_id
@@ -106,6 +122,8 @@ class PretrainedTextTokenizer:
                 raise ValueError(
                     "Tokenizer has no bos_token_id but BOS prepend was requested."
                 )
+            else:
+                pass
             if max_length == 1:
                 batch = torch.full(
                     (len(texts), 1),
@@ -114,6 +132,8 @@ class PretrainedTextTokenizer:
                 )
                 mask = torch.ones((len(texts), 1), dtype=torch.bool)
                 return batch, mask
+            else:
+                pass
             body_max_length = max_length - 1
         else:
             body_max_length = max_length
@@ -132,6 +152,8 @@ class PretrainedTextTokenizer:
 
         if not self.add_bos:
             return body_ids, body_mask
+        else:
+            pass
 
         batch = torch.full(
             (len(texts), max_length),

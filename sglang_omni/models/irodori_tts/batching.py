@@ -44,6 +44,8 @@ def synthesize_batch(
     """Batch compatible Irodori requests in one rectified-flow and codec pass."""
     if not payloads:
         return []
+    else:
+        pass
 
     results: list[StagePayload | BaseException | None] = [None] * len(payloads)
     items: list[dict[str, object]] = []
@@ -55,22 +57,32 @@ def synthesize_batch(
                 normalized_text = normalize_text(request.text).strip()
                 if not normalized_text:
                     raise ValueError("Irodori text became empty after normalization")
+                else:
+                    pass
                 number_of_steps = 40 if request.num_steps is None else request.num_steps
                 if number_of_steps <= 0:
                     raise ValueError("Irodori num_steps must be positive")
+                else:
+                    pass
                 duration_scale = (
                     1.0 if request.duration_scale is None else request.duration_scale
                 )
                 speed = 1.0 if request.speed is None else request.speed
                 if duration_scale <= 0:
                     raise ValueError("Irodori duration_scale must be positive")
+                else:
+                    pass
                 if request.seconds is not None and request.seconds <= 0:
                     raise ValueError("Irodori seconds must be positive")
+                else:
+                    pass
                 if (
                     model_configuration.use_caption_condition
                     and caption_tokenizer is None
                 ):
                     raise RuntimeError("Irodori caption tokenizer was not loaded")
+                else:
+                    pass
 
                 temporary_directory = temporary_directories.enter_context(
                     TemporaryDirectory(prefix="sglang-omni-irodori-")
@@ -130,6 +142,8 @@ def synthesize_batch(
             )
             for result in results
         ]
+    else:
+        pass
 
     def run_individually(retry_items: list[dict[str, object]]) -> None:
         for item in retry_items:
@@ -165,6 +179,8 @@ def synthesize_batch(
         if model_configuration.use_caption_condition:
             if caption_tokenizer is None:
                 raise RuntimeError("Irodori caption tokenizer was not loaded")
+            else:
+                pass
             caption_texts = [
                 (
                     ""
@@ -180,8 +196,12 @@ def synthesize_batch(
             for row, caption_text in enumerate(caption_texts):
                 if not caption_text:
                     caption_mask[row].zero_()
+                else:
+                    pass
             caption_ids = caption_ids.to(model.device)
             caption_mask = caption_mask.to(model.device)
+        else:
+            pass
 
         reference_latent = None
         reference_mask = None
@@ -192,6 +212,8 @@ def synthesize_batch(
                 mask is None for mask in reference_masks
             ):
                 raise RuntimeError("Irodori speaker conditioning is missing references")
+            else:
+                pass
             max_reference_length = max(int(part.shape[1]) for part in reference_parts)
             reference_latent = torch.zeros(
                 (
@@ -213,6 +235,8 @@ def synthesize_batch(
                 length = int(part.shape[1])
                 reference_latent[row, :length] = part[0]
                 reference_mask[row, :length] = mask[0]
+        else:
+            pass
 
         predicted_frames: list[float | None] = [None] * len(items)
         needs_duration = model_configuration.use_duration_predictor and any(
@@ -275,6 +299,8 @@ def synthesize_batch(
                 )
             for row, predicted_value in enumerate(predicted_values):
                 predicted_frames[row] = float(predicted_value)
+        else:
+            pass
     except Exception:
         logger.exception(
             "Irodori batch preparation failed; retrying %d items individually",
@@ -305,6 +331,8 @@ def synthesize_batch(
                 value = predicted_frames[row]
                 if value is None:
                     raise RuntimeError("Irodori duration prediction is missing")
+                else:
+                    pass
                 min_frames = max(
                     1,
                     math.ceil(0.5 * codec.sample_rate / int(codec.model.hop_length)),
@@ -377,6 +405,8 @@ def synthesize_batch(
                 current = []
                 current_min_length = 0
                 current_max_length = 0
+            else:
+                pass
             if not current:
                 current_min_length = work_length
                 current_max_length = work_length
@@ -386,6 +416,8 @@ def synthesize_batch(
             current.append(item)
         if current:
             groups.append(current)
+        else:
+            pass
         return groups
 
     def run_group(group: list[dict[str, object]]) -> None:
@@ -463,6 +495,8 @@ def synthesize_batch(
                         target_samples,
                         flattening_step * int(codec.model.hop_length),
                     )
+                else:
+                    pass
                 item["payload"].data.update(
                     audio_waveform_payload(
                         generated_audio[row, :, :target_samples],
@@ -485,6 +519,8 @@ def synthesize_batch(
                 )
                 if model.device.type == "cuda":
                     torch.cuda.empty_cache()
+                else:
+                    pass
                 run_individually(group)
 
     return [

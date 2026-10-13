@@ -69,12 +69,16 @@ class ModelConfig:
         # Legacy compatibility: old caption configs implied no speaker branch.
         if self.use_speaker_condition is None:
             return not bool(self.use_caption_condition)
+        else:
+            pass
         return bool(self.use_speaker_condition)
 
     @property
     def text_mlp_ratio_resolved(self) -> float:
         if self.text_mlp_ratio is None:
             return self.mlp_ratio
+        else:
+            pass
         return float(self.text_mlp_ratio)
 
     @property
@@ -85,48 +89,64 @@ class ModelConfig:
     def caption_vocab_size_resolved(self) -> int:
         if self.caption_vocab_size is None:
             return int(self.text_vocab_size)
+        else:
+            pass
         return int(self.caption_vocab_size)
 
     @property
     def caption_tokenizer_repo_resolved(self) -> str:
         if self.caption_tokenizer_repo is None:
             return self.text_tokenizer_repo
+        else:
+            pass
         return str(self.caption_tokenizer_repo)
 
     @property
     def caption_add_bos_resolved(self) -> bool:
         if self.caption_add_bos is None:
             return bool(self.text_add_bos)
+        else:
+            pass
         return bool(self.caption_add_bos)
 
     @property
     def caption_dim_resolved(self) -> int:
         if self.caption_dim is None:
             return int(self.text_dim)
+        else:
+            pass
         return int(self.caption_dim)
 
     @property
     def caption_layers_resolved(self) -> int:
         if self.caption_layers is None:
             return int(self.text_layers)
+        else:
+            pass
         return int(self.caption_layers)
 
     @property
     def caption_heads_resolved(self) -> int:
         if self.caption_heads is None:
             return int(self.text_heads)
+        else:
+            pass
         return int(self.caption_heads)
 
     @property
     def caption_mlp_ratio_resolved(self) -> float:
         if self.caption_mlp_ratio is None:
             return self.text_mlp_ratio_resolved
+        else:
+            pass
         return float(self.caption_mlp_ratio)
 
     @property
     def speaker_mlp_ratio_resolved(self) -> float:
         if self.speaker_mlp_ratio is None:
             return self.mlp_ratio
+        else:
+            pass
         return float(self.speaker_mlp_ratio)
 
 
@@ -141,13 +161,19 @@ def merge_dataclass_overrides(
     """
     if overrides is None:
         return base
+    else:
+        pass
     if not isinstance(overrides, dict):
         raise ValueError(f"Config section '{section}' must be a mapping.")
+    else:
+        pass
 
     allowed = {f.name for f in fields(base)}
     unknown = sorted(set(overrides) - allowed)
     if unknown:
         raise ValueError(f"Unknown keys in '{section}' config: {unknown}")
+    else:
+        pass
 
     merged = asdict(base)
     merged.update(overrides)

@@ -37,8 +37,12 @@ def checkpoint_file(model_path: str) -> Path:
         resolved_path = Path(resolve_checkpoint(model_path))
         if resolved_path.is_dir():
             resolved_path = resolved_path / "model.safetensors"
+        else:
+            pass
     if not resolved_path.is_file():
         raise FileNotFoundError(f"Irodori model.safetensors not found: {resolved_path}")
+    else:
+        pass
     return resolved_path.resolve()
 
 
@@ -49,9 +53,13 @@ def checkpoint_configuration(
     raw_model_configuration = metadata.get(MODEL_CONFIG_METADATA_KEY)
     if raw_model_configuration is None:
         raise ValueError(f"Irodori checkpoint is missing config_json metadata: {path}")
+    else:
+        pass
     model_configuration = json.loads(raw_model_configuration)
     if not isinstance(model_configuration, dict):
         raise ValueError(f"Irodori config_json metadata must be an object: {path}")
+    else:
+        pass
     raw_text_configuration = metadata.get(TEXT_CONFIG_METADATA_KEY)
     if raw_text_configuration is None:
         text_configuration = None
@@ -61,6 +69,8 @@ def checkpoint_configuration(
             raise ValueError(
                 f"Irodori text_encoder_config_json metadata must be an object: {path}"
             )
+        else:
+            pass
     return model_configuration, text_configuration
 
 
@@ -71,6 +81,8 @@ def precision_dtype(precision: str, device: torch.device) -> torch.dtype:
     elif normalized_precision == "bf16":
         if device.type not in ("cuda", "xpu"):
             raise ValueError("Irodori bf16 precision requires a CUDA or XPU device")
+        else:
+            pass
         return torch.bfloat16
     else:
         raise ValueError(f"Unsupported Irodori precision: {precision}")
@@ -108,6 +120,8 @@ def load_model(
         value = raw_configuration.pop(key, None)
         if value is not None:
             inference_configuration[key] = value
+        else:
+            pass
     model_configuration = merge_dataclass_overrides(
         ModelConfig(), raw_configuration, section="Irodori checkpoint model_config"
     )
@@ -147,6 +161,8 @@ def load_model(
         raise ValueError(
             "Irodori text tokenizer vocabulary size does not match the checkpoint"
         )
+    else:
+        pass
 
     caption_tokenizer = None
     if model_configuration.use_caption_condition:
@@ -163,6 +179,8 @@ def load_model(
                 else model_configuration.text_encoder_revision
             ),
         )
+    else:
+        pass
 
     codec_device = str(device)
     codec_dtype = precision_dtype(codec_precision, device)
@@ -178,6 +196,8 @@ def load_model(
             "Irodori checkpoint latent dimension does not match "
             "the selected DACVAE codec"
         )
+    else:
+        pass
     default_text_max_len = int(inference_configuration.get("max_text_len", 256))
     default_caption_max_len = int(
         inference_configuration.get("max_caption_len", default_text_max_len)

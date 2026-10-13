@@ -23,16 +23,24 @@ def normalize_speaker_embedding_tensor(
 ) -> torch.Tensor:
     if tensor.ndim == 3 and tensor.shape[0] == 1:
         tensor = tensor[0]
+    else:
+        pass
     if tensor.ndim != 2:
         raise ValueError(
             f"{field_name} must have shape (tokens, dim), got {tuple(tensor.shape)}"
         )
+    else:
+        pass
     if int(tensor.shape[0]) <= 0:
         raise ValueError(f"{field_name} must contain at least one token.")
+    else:
+        pass
     if int(tensor.shape[1]) != int(speaker_dim):
         raise ValueError(
             f"{field_name} dim mismatch: expected {int(speaker_dim)}, got {int(tensor.shape[1])}"
         )
+    else:
+        pass
 
     return tensor.detach().float().contiguous()
 
@@ -58,10 +66,16 @@ class SpeakerInversionEmbedding(nn.Module):
         init_std = float(init_std)
         if num_tokens <= 0:
             raise ValueError(f"speaker inversion tokens must be > 0, got {num_tokens}")
+        else:
+            pass
         if speaker_dim <= 0:
             raise ValueError(f"speaker_dim must be > 0, got {speaker_dim}")
+        else:
+            pass
         if init_std < 0:
             raise ValueError(f"speaker inversion init_std must be >= 0, got {init_std}")
+        else:
+            pass
 
         if init_embedding is None:
             embedding = (
@@ -78,6 +92,8 @@ class SpeakerInversionEmbedding(nn.Module):
                     "speaker inversion init embedding token mismatch: "
                     f"expected {num_tokens}, got {int(embedding.shape[0])}"
                 )
+            else:
+                pass
         self.embedding = nn.Parameter(embedding)
 
     @property
@@ -111,6 +127,8 @@ def extract_embedding_payload(raw: dict[str, torch.Tensor]) -> dict[str, torch.T
         raise ValueError(
             f"Speaker inversion file must contain a tensor dictionary, got {type(raw)!r}."
         )
+    else:
+        pass
 
     if SPEAKER_EMBEDDING_KEY in raw:
         embedding = raw[SPEAKER_EMBEDDING_KEY]
@@ -119,7 +137,11 @@ def extract_embedding_payload(raw: dict[str, torch.Tensor]) -> dict[str, torch.T
                 f"Speaker inversion '{SPEAKER_EMBEDDING_KEY}' must be a tensor, "
                 f"got {type(embedding)!r}."
             )
+        else:
+            pass
         return {SPEAKER_EMBEDDING_KEY: embedding}
+    else:
+        pass
 
     raise ValueError(f"Speaker inversion file is missing '{SPEAKER_EMBEDDING_KEY}'.")
 
@@ -146,6 +168,8 @@ def load_speaker_inversion_payload(
             "Speaker Inversion embeddings must use the "
             f"{SPEAKER_INVERSION_SAFETENSORS_SUFFIX!r} suffix: {source}"
         )
+    else:
+        pass
     raw = load_safetensors_file(source, device="cpu")
 
     out = normalize_speaker_inversion_payload(raw)
@@ -164,6 +188,8 @@ def save_speaker_inversion_safetensors(
             "Speaker Inversion safetensors output must use the "
             f"{SPEAKER_INVERSION_SAFETENSORS_SUFFIX!r} suffix: {target}"
         )
+    else:
+        pass
     normalized = normalize_speaker_inversion_payload(payload)
     tensors = {
         SPEAKER_EMBEDDING_KEY: normalized[SPEAKER_EMBEDDING_KEY].to(dtype=dtype),
@@ -192,6 +218,8 @@ def speaker_inversion_state_dict(model: nn.Module) -> dict[str, torch.Tensor]:
         raise ValueError(
             "Model does not have an enabled SpeakerInversionEmbedding module."
         )
+    else:
+        pass
 
     return {
         SPEAKER_EMBEDDING_KEY: module.embedding.detach().cpu().float().clone(),

@@ -20,6 +20,8 @@ def patchify_latent(latent: torch.Tensor, patch_size: int) -> torch.Tensor:
     """
     if patch_size <= 1:
         return latent
+    else:
+        pass
     bsz, seq_len, dim = latent.shape
     usable = (seq_len // patch_size) * patch_size
     latent = latent[:, :usable]
@@ -35,6 +37,8 @@ def unpatchify_latent(
     """
     if patch_size <= 1:
         return patched
+    else:
+        pass
     return patched.reshape(patched.shape[0], patched.shape[1] * patch_size, latent_dim)
 
 
@@ -66,11 +70,15 @@ class DACVAECodec:
             local_repo = Path(__file__).resolve().parents[2] / "dacvae"
             if local_repo.exists():
                 sys.path.insert(0, str(local_repo))
+            else:
+                pass
             from dacvae import DACVAE
 
         location = str(repo_id).strip()
         if location.startswith("hf://"):
             location = location[len("hf://") :]
+        else:
+            pass
         if (
             not Path(location).exists()
             and "/" in location
@@ -82,10 +90,14 @@ class DACVAECodec:
             except Exception:
                 # Let DACVAE.load surface a clearer error if this is not a valid path/repo.
                 pass
+        else:
+            pass
 
         model = DACVAE.load(location).eval().to(device)
         if dtype is not None:
             model = model.to(dtype=dtype)
+        else:
+            pass
 
         decoder = getattr(model, "decoder", None)
         if decoder is not None and hasattr(decoder, "alpha"):
@@ -102,9 +114,15 @@ class DACVAECodec:
                     return _decoder.wm_model.encoder_block.forward_no_conv(x)
 
                 decoder.watermark = _watermark_passthrough
+            else:
+                pass
+        else:
+            pass
 
         if deterministic_decode:
             cls.configure_deterministic_decode(model=model, device=device)
+        else:
+            pass
 
         model_dtype = next(model.parameters()).dtype
         # Infer latent dimension by encoding a tiny random signal.
@@ -131,6 +149,8 @@ class DACVAECodec:
         msg_processor = getattr(wm_model, "msg_processor", None)
         if msg_processor is None:
             return
+        else:
+            pass
         nbits = int(msg_processor.nbits)
         message_device = torch.device(device)
 
@@ -147,6 +167,8 @@ class DACVAECodec:
     ) -> torch.Tensor:
         if target_db is None:
             return wav
+        else:
+            pass
         wav_device = wav.device
         wav = wav.to(dtype=torch.float32)
         if wav.ndim == 2:
@@ -156,11 +178,15 @@ class DACVAECodec:
                 wav = wav[:, 0]
             else:
                 wav = wav.mean(dim=0)
+        else:
+            pass
         if wav.ndim != 1:
             raise ValueError(
                 "normalize_loudness expects a mono waveform with shape (T,) "
                 f"or singleton-channel (1, T)/(T, 1), got {tuple(wav.shape)}"
             )
+        else:
+            pass
 
         try:
             from audiotools import AudioSignal
@@ -176,6 +202,8 @@ class DACVAECodec:
         normalized = signal.audio_data
         if not isinstance(normalized, torch.Tensor):
             normalized = torch.as_tensor(normalized)
+        else:
+            pass
         normalized = normalized.to(dtype=torch.float32, device=wav_device)
         normalized = normalized.squeeze()
         if normalized.ndim != 1:
@@ -183,6 +211,8 @@ class DACVAECodec:
                 "audiotools normalization returned an unexpected waveform shape "
                 f"{tuple(normalized.shape)}"
             )
+        else:
+            pass
         return normalized
 
     @torch.inference_mode()
@@ -204,13 +234,19 @@ class DACVAECodec:
         """
         if waveform.ndim == 2:
             waveform = waveform.unsqueeze(0)
+        else:
+            pass
         if waveform.ndim != 3:
             raise ValueError(
                 f"Expected waveform ndim=3, got shape={tuple(waveform.shape)}"
             )
+        else:
+            pass
 
         if waveform.shape[1] != 1:
             waveform = waveform.mean(dim=1, keepdim=True)
+        else:
+            pass
         if sample_rate != self.sample_rate:
             try:
                 import torchaudio
@@ -221,6 +257,8 @@ class DACVAECodec:
             waveform = torchaudio.functional.resample(
                 waveform, sample_rate, self.sample_rate
             )
+        else:
+            pass
 
         if normalize_db is _CODEC_DEFAULT:
             effective_normalize_db = self.normalize_db
@@ -247,18 +285,28 @@ class DACVAECodec:
                         sample_rate=self.sample_rate,
                         target_db=effective_normalize_db,
                     )
+                else:
+                    pass
                 wav = wav.squeeze()
                 if wav.ndim != 1:
                     raise RuntimeError(
                         "Expected mono per-item waveform after preprocessing, "
                         f"got shape={tuple(wav.shape)}"
                     )
+                else:
+                    pass
                 if effective_ensure_max:
                     peak = wav.abs().max()
                     if torch.isfinite(peak) and peak > 1.0:
                         wav = wav * (1.0 / float(peak))
+                    else:
+                        pass
+                else:
+                    pass
                 processed.append(wav)
             waveform = torch.stack(processed, dim=0).unsqueeze(1)
+        else:
+            pass
 
         waveform = waveform.to(self.device, dtype=self.dtype)
         if self.deterministic_encode:
@@ -272,6 +320,8 @@ class DACVAECodec:
                 raise RuntimeError(
                     "deterministic_encode=True requires encoder/_pad/quantizer.in_proj on DACVAE model."
                 )
+            else:
+                pass
             z = self.model.encoder(
                 self.model._pad(waveform)
             )  # noqa: SLF001  # leading-underscore exception: DACVAE exposes padding as _pad.
@@ -291,6 +341,8 @@ class DACVAECodec:
         """
         if latent.ndim != 3:
             raise ValueError(f"Expected latent ndim=3, got shape={tuple(latent.shape)}")
+        else:
+            pass
         z = (
             latent.transpose(1, 2).contiguous().to(self.device, dtype=self.dtype)
         )  # (B, D, T)

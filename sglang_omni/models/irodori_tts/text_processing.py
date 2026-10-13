@@ -39,6 +39,8 @@ def strip_outer_brackets(text: str) -> str:
     while True:
         if len(text) < 2:
             break
+        else:
+            pass
 
         start_char = text[0]
         end_char = text[-1]
@@ -52,14 +54,22 @@ def strip_outer_brackets(text: str) -> str:
                     depth += 1
                 elif char == end_char:
                     depth -= 1
+                else:
+                    pass
 
                 if depth == 0 and i < len(text) - 1:
                     is_enclosing_all = False
                     break
+                else:
+                    pass
 
             if is_enclosing_all and depth == 0:
                 text = text[1:-1]
                 continue
+            else:
+                pass
+        else:
+            pass
 
         break
 
@@ -206,8 +216,12 @@ def build_duration_features(
             f"texts={len(text_list)} token_counts={len(token_count_list)} "
             f"has_speaker={len(has_speaker_list)}"
         )
+    else:
+        pass
     if max_text_len <= 0:
         raise ValueError(f"max_text_len must be > 0, got {max_text_len}")
+    else:
+        pass
 
     rows: list[list[float]] = []
     for text, token_count, speaker_available in zip(
@@ -257,10 +271,14 @@ def set_duration_has_speaker_feature(
         raise ValueError(
             f"Expected duration features shape (B, D), got {tuple(features.shape)}"
         )
+    else:
+        pass
     if features.shape[1] <= 0:
         raise ValueError(
             f"duration features must have at least one column, got {features.shape[1]}"
         )
+    else:
+        pass
     out = features.clone()
     out[:, -1] = has_speaker.to(device=features.device, dtype=features.dtype)
     return out

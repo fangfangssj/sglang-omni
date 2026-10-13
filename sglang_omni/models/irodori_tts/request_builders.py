@@ -36,8 +36,12 @@ class IrodoriSynthesisRequest:
 def request_mapping(value: object, field_name: str) -> Mapping[str, object]:
     if value is None:
         return {}
+    else:
+        pass
     if isinstance(value, Mapping):
         return value
+    else:
+        pass
     raise TypeError(f"Irodori {field_name} must be an object")
 
 
@@ -49,31 +53,53 @@ def reference_from_value(value: object) -> IrodoriReference:
             )
             if not data_uri_separator or not data_uri_header.endswith(";base64"):
                 raise ValueError("Irodori reference data URI must be base64 encoded")
+            else:
+                pass
             media_type = data_uri_header.removesuffix(";base64") or "audio/wav"
             return IrodoriReference(audio_base64=encoded_audio, media_type=media_type)
+        else:
+            pass
         parsed_path = urlparse(value)
         if parsed_path.scheme == "file":
             return IrodoriReference(audio_path=unquote(parsed_path.path))
+        else:
+            pass
         if parsed_path.scheme:
             raise ValueError("Irodori reference audio must be a local path or data URI")
+        else:
+            pass
         return IrodoriReference(audio_path=value)
+    else:
+        pass
     reference = request_mapping(value, "reference audio")
     for field_name in ("audio_path", "path", "ref_audio", "audio"):
         audio_path = reference.get(field_name)
         if audio_path is not None:
             if not isinstance(audio_path, str):
                 raise TypeError("Irodori reference audio path must be a string")
+            else:
+                pass
             return reference_from_value(audio_path)
+        else:
+            pass
     encoded_audio = reference.get("data")
     if encoded_audio is None:
         encoded_audio = reference.get("base64")
+    else:
+        pass
     if encoded_audio is None:
         raise ValueError("Irodori reference is missing audio")
+    else:
+        pass
     if not isinstance(encoded_audio, str):
         raise TypeError("Irodori reference audio data must be a base64 string")
+    else:
+        pass
     media_type = reference.get("media_type") or "audio/wav"
     if not isinstance(media_type, str):
         raise TypeError("Irodori reference media_type must be a string")
+    else:
+        pass
     return reference_from_value(
         f"data:{media_type};base64,{encoded_audio}"
         if not encoded_audio.startswith("data:")
@@ -84,16 +110,24 @@ def reference_from_value(value: object) -> IrodoriReference:
 def optional_integer(value: object, field_name: str) -> int | None:
     if value is None:
         return None
+    else:
+        pass
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"Irodori {field_name} must be an integer")
+    else:
+        pass
     return value
 
 
 def optional_float(value: object, field_name: str) -> float | None:
     if value is None:
         return None
+    else:
+        pass
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TypeError(f"Irodori {field_name} must be a number")
+    else:
+        pass
     return float(value)
 
 
@@ -108,9 +142,13 @@ def build_irodori_request(payload: StagePayload) -> IrodoriSynthesisRequest:
         text_value = input_mapping.get("text", input_mapping.get("input"))
         if not isinstance(text_value, str):
             raise ValueError("Irodori requires a text input")
+        else:
+            pass
         text = text_value
     if not text.strip():
         raise ValueError("Irodori requires non-empty Japanese text")
+    else:
+        pass
 
     parameters = request_mapping(payload.request.params, "parameters")
     stage_params = request_mapping(parameters.get("stage_params"), "stage parameters")
@@ -123,35 +161,55 @@ def build_irodori_request(payload: StagePayload) -> IrodoriSynthesisRequest:
     caption_value = input_mapping.get("caption")
     if caption_value is None:
         caption_value = input_mapping.get("instructions")
+    else:
+        pass
     if caption_value is None:
         caption_value = tts_parameters.get("instructions")
+    else:
+        pass
     if caption_value is not None and not isinstance(caption_value, str):
         raise TypeError("Irodori caption must be a string")
+    else:
+        pass
     caption = caption_value.strip() if isinstance(caption_value, str) else None
     if caption == "":
         caption = None
+    else:
+        pass
 
     raw_references = input_mapping.get("references")
     if raw_references is None:
         raw_reference = input_mapping.get("ref_audio")
         if raw_reference is None:
             raw_reference = tts_parameters.get("ref_audio")
+        else:
+            pass
         raw_references = [] if raw_reference is None else [raw_reference]
+    else:
+        pass
     if not isinstance(raw_references, (list, tuple)):
         raise TypeError("Irodori references must be a list")
+    else:
+        pass
     references = tuple(reference_from_value(reference) for reference in raw_references)
 
     def parameter_value(parameter_name: str) -> object:
         value = synthesis_params.get(parameter_name)
         if value is None:
             value = parameters.get(parameter_name)
+        else:
+            pass
         if value is None:
             value = tts_parameters.get(parameter_name)
+        else:
+            pass
         return value
 
     speed = optional_float(parameter_value("speed"), "speed")
     if speed is not None and (not math.isfinite(speed) or not 0.25 <= speed <= 4.0):
         raise ValueError("Irodori speed must be between 0.25 and 4.0")
+    else:
+        pass
 
     return IrodoriSynthesisRequest(
         text=text,

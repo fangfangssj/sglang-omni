@@ -41,6 +41,8 @@ def reference_paths(
     for reference_index, reference in enumerate(request.references):
         if reference.audio_path is not None:
             audio_paths.append(reference.audio_path)
+        else:
+            pass
         if reference.audio_base64 is not None:
             extension = mimetypes.guess_extension(reference.media_type) or ".wav"
             audio_path = (
@@ -54,6 +56,8 @@ def reference_paths(
                 ) from error
             audio_path.write_bytes(audio_bytes)
             audio_paths.append(str(audio_path))
+        else:
+            pass
     return audio_paths
 
 
@@ -66,6 +70,8 @@ def prepare_reference(
 ) -> tuple[torch.Tensor | None, torch.Tensor | None]:
     if not model_configuration.use_speaker_condition_resolved:
         return None, None
+    else:
+        pass
     if not audio_paths:
         reference_length = max(1, int(model_configuration.speaker_patch_size))
         reference_latent = torch.zeros(
@@ -77,6 +83,8 @@ def prepare_reference(
             (1, reference_length), device=model.device, dtype=torch.bool
         )
         return reference_latent, reference_mask
+    else:
+        pass
 
     latent_pieces = [codec.encode_file(audio_path) for audio_path in audio_paths]
     reference_latent = torch.cat(latent_pieces, dim=1)
@@ -91,6 +99,8 @@ def prepare_reference(
     ).to(device=model.device, dtype=model.dtype)
     if reference_latent.shape[1] == 0:
         raise ValueError("Irodori reference audio produced an empty latent sequence")
+    else:
+        pass
     reference_mask = torch.ones(
         (1, reference_latent.shape[1]), device=model.device, dtype=torch.bool
     )
@@ -109,14 +119,20 @@ def find_flattening_points(
         raise ValueError(
             f"Expected Irodori latent batch shape (B, T, D), got {tuple(latent_batch.shape)}"
         )
+    else:
+        pass
     batch_size, total_steps, latent_dim = latent_batch.shape
     if len(latent_lengths) != batch_size:
         raise ValueError("Irodori latent lengths must match the batch size")
+    else:
+        pass
     lengths = torch.as_tensor(
         latent_lengths, device=latent_batch.device, dtype=torch.long
     ).clamp(min=0, max=total_steps)
     if total_steps == 0 or latent_dim == 0 or window_size <= 0:
         return [int(length) for length in lengths.tolist()]
+    else:
+        pass
 
     # Accumulate in fp32 to keep rolling statistics stable for bf16/fp16 latents.
     values = latent_batch.float()
@@ -163,6 +179,8 @@ def find_flattening_point(
         raise ValueError(
             f"Expected Irodori latent shape (T, D), got {tuple(latent.shape)}"
         )
+    else:
+        pass
     return find_flattening_points(
         latent.unsqueeze(0),
         [int(latent.shape[0])],
@@ -189,13 +207,19 @@ def synthesize(
     normalized_text = normalize_text(request.text).strip()
     if not normalized_text:
         raise ValueError("Irodori text became empty after normalization")
+    else:
+        pass
     number_of_steps = 40 if request.num_steps is None else request.num_steps
     if number_of_steps <= 0:
         raise ValueError("Irodori num_steps must be positive")
+    else:
+        pass
     duration_scale = 1.0 if request.duration_scale is None else request.duration_scale
     speed = 1.0 if request.speed is None else request.speed
     if duration_scale <= 0:
         raise ValueError("Irodori duration_scale must be positive")
+    else:
+        pass
     seed = secrets.randbits(63) if request.seed is None else request.seed
 
     text_ids, text_mask = tokenizer.batch_encode(
@@ -208,14 +232,20 @@ def synthesize(
     if model_configuration.use_caption_condition:
         if caption_tokenizer is None:
             raise RuntimeError("Irodori caption tokenizer was not loaded")
+        else:
+            pass
         caption_text = "" if request.caption is None else request.caption.strip()
         caption_ids, caption_mask = caption_tokenizer.batch_encode(
             [caption_text], max_length=max_caption_len
         )
         if not caption_text:
             caption_mask.zero_()
+        else:
+            pass
         caption_ids = caption_ids.to(model.device)
         caption_mask = caption_mask.to(model.device)
+    else:
+        pass
 
     with TemporaryDirectory(prefix="sglang-omni-irodori-") as temporary_directory:
         audio_paths = reference_paths(request, temporary_directory)
@@ -230,6 +260,8 @@ def synthesize(
             if request.seconds is not None:
                 if request.seconds <= 0:
                     raise ValueError("Irodori seconds must be positive")
+                else:
+                    pass
                 selected_seconds = min(max_seconds, max(0.5, request.seconds / speed))
                 target_samples = max(1, int(selected_seconds * codec.sample_rate))
                 latent_steps = math.ceil(target_samples / int(codec.model.hop_length))
@@ -237,6 +269,8 @@ def synthesize(
                 has_speaker = torch.zeros((1,), dtype=torch.bool, device=model.device)
                 if reference_mask is not None:
                     has_speaker = reference_mask.any(dim=1)
+                else:
+                    pass
                 duration_features = build_duration_features(
                     [normalized_text],
                     token_counts=text_mask.sum(dim=1),
@@ -339,6 +373,8 @@ def synthesize(
                 target_samples = min(
                     target_samples, flattening_step * int(codec.model.hop_length)
                 )
+            else:
+                pass
             generated_audio = codec.decode_latent(generated_latent)[
                 0, :, :target_samples
             ]
